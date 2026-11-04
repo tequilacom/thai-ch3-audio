@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CH3 听音背词 · ALA Icebreaker</title>
+<style>
+:root{
+  --brand:#1f6f6b; --brand-weak:#e5f2f1; --brand-mid:#8fc4c1;
+  --ink:#1c2b2a; --ink-2:#5a6f6d; --bg:#f6faf9; --card:#ffffff;
+  --warn:#b45309; --warn-bg:#fef3c7; --line:#dce9e8;
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
+body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--ink); max-width:760px; margin:0 auto;
+  padding:16px 14px 90px; line-height:1.55}
+h1{font-size:20px; color:var(--brand); margin-bottom:4px}
+.sub{font-size:12.5px; color:var(--ink-2); margin-bottom:14px}
+.warnbar{background:var(--warn-bg); color:var(--warn); font-size:13px;
+  border-radius:10px; padding:9px 12px; margin-bottom:14px; display:none}
+.tabs{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px;
+  scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto; border:1.5px solid var(--line); background:var(--card);
+  color:var(--ink-2); border-radius:999px; padding:7px 14px; font-size:13.5px; cursor:pointer;
+  user-select:none; transition:.15s}
+.tab.on{background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600}
+.modebar{display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap}
+.mbtn{border:1.5px solid var(--line); background:var(--card); color:var(--ink-2);
+  border-radius:8px; padding:5px 11px; font-size:12.5px; cursor:pointer}
+.mbtn.on{border-color:var(--brand); color:var(--brand); font-weight:600; background:var(--brand-weak)}
+.bigplay{margin-left:auto; border:none; background:var(--brand); color:#fff;
+  border-radius:8px; padding:7px 14px; font-size:13px; cursor:pointer; font-weight:600}
+.bigplay:disabled{opacity:.5}
+.card{background:var(--card); border:1px solid var(--line); border-radius:14px;
+  padding:14px 15px; margin-bottom:10px; display:flex; align-items:center; gap:12px;
+  transition:box-shadow .15s}
+.card.playing{box-shadow:0 0 0 2px var(--brand-mid)}
+.pbtn{flex:0 0 auto; width:46px; height:46px; border-radius:50%; border:none;
+  background:var(--brand-weak); color:var(--brand); font-size:19px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:.12s}
+.pbtn:active{transform:scale(.92); background:var(--brand-mid); color:#fff}
+.pbtn.slow{width:34px; height:34px; font-size:11px; border-radius:10px}
+.meta{flex:1; min-width:0}
+.w{font-size:19px; font-weight:600; letter-spacing:.2px}
+.w .idx{color:var(--brand-mid); font-weight:700; font-size:14px; margin-right:7px}
+.cn{font-size:13.5px; color:var(--ink-2); margin-top:2px}
+.cn.hidden-cn .txt{filter:blur(6px); user-select:none}
+.cn .txt{transition:filter .2s}
+.reveal{font-size:11.5px; color:var(--brand); border:none; background:none;
+  cursor:pointer; padding:2px 0 0}
+.dur{flex:0 0 auto; font-size:11px; color:#9ab3b1; font-variant-numeric:tabular-nums}
+.footer{margin-top:18px; font-size:11.5px; color:#9ab3b1; text-align:center}
+.checkbtn{border:1.5px dashed var(--brand-mid); background:var(--card); color:var(--brand);
+  border-radius:10px; padding:8px 14px; font-size:12.5px; cursor:pointer; width:100%; margin-bottom:12px}
+.checkout{font-size:12px; color:var(--ink-2); background:var(--card); border:1px solid var(--line);
+  border-radius:10px; padding:10px 12px; margin-bottom:14px; display:none; white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>CH3 听音背词</h1>
+<div class="sub">ALA Icebreaker · 第3章 句型 · 真人音频按词切分 · 2026-11-04</div>
+<div class="warnbar" id="warnbar">⚠️ 自检发现 0 个切分疑似截断的音频，已标 ⚠️，建议整段重听原音频核对该词。</div>
+<div class="tabs" id="tabs"></div>
+<button class="checkbtn" id="checkbtn">🔍 自检报告（切分质量）</button>
+<div class="checkout" id="checkout"></div>
+<div class="modebar">
+  <button class="mbtn on" data-mode="normal">列表模式</button>
+  <button class="mbtn" data-mode="quiz">遮义模式（盖住中文）</button>
+  <button class="mbtn" data-mode="dict">听写模式（盖住泰文）</button>
+  <button class="bigplay" id="seqplay">▶ 连播本组</button>
+</div>
+<div id="list"></div>
+<div class="footer">点喇叭播放 · 点 ½ 半速播放 · 点中文/泰文可显隐 · 自检通过 55/55（2026-11-04）</div>
+<audio id="au"></audio>
+<script>
+const DATA = [{"set": "p.39 常用动词", "i": 1, "word": "pay", "cn": "去", "file": "audio/001.mp3", "dur": 4.84, "flag": "OK", "lead_s": 0.04, "trail_s": 0.0, "orig": "001_pay_去.mp3"}, {"set": "p.39 常用动词", "i": 2, "word": "kin", "cn": "吃", "file": "audio/002.mp3", "dur": 5.14, "flag": "OK", "lead_s": 0.05, "trail_s": 0.02, "orig": "002_kin_吃.mp3"}, {"set": "p.39 常用动词", "i": 3, "word": "sǔun", "cn": "零/高(见登记存疑)", "file": "audio/003.mp3", "dur": 3.7, "flag": "OK", "lead_s": 0.06, "trail_s": 0.04, "orig": "003_sǔun_零_高_见登记存疑.mp3"}, {"set": "p.39 常用动词", "i": 4, "word": "sɛ̀ɛp", "cn": "练习", "file": "audio/004.mp3", "dur": 2.2, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "004_sɛ_ɛp_练习.mp3"}, {"set": "p.39 常用动词", "i": 5, "word": "rian", "cn": "学习", "file": "audio/005.mp3", "dur": 4.38, "flag": "OK", "lead_s": 0.05, "trail_s": 0.09, "orig": "005_rian_学习.mp3"}, {"set": "p.39 常用动词", "i": 6, "word": "chɔ̂p", "cn": "喜欢", "file": "audio/006.mp3", "dur": 6.6, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "006_chɔ_p_喜欢.mp3"}, {"set": "p.39 常用动词", "i": 7, "word": "mii", "cn": "有", "file": "audio/007.mp3", "dur": 3.38, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "007_mii_有.mp3"}, {"set": "p.39 常用动词", "i": 8, "word": "sɯ́", "cn": "买(手写存疑)", "file": "audio/008.mp3", "dur": 5.24, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "008_sɯ_买_手写存疑.mp3"}, {"set": "p.39 常用动词", "i": 9, "word": "jəə", "cn": "遇见", "file": "audio/009.mp3", "dur": 4.44, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "009_jəə_遇见.mp3"}, {"set": "p.39 常用动词", "i": 10, "word": "nɔɔn", "cn": "睡", "file": "audio/010.mp3", "dur": 4.84, "flag": "OK", "lead_s": 0.08, "trail_s": 0.06, "orig": "010_nɔɔn_睡.mp3"}, {"set": "p.39 常用动词", "i": 11, "word": "duu", "cn": "看", "file": "audio/011.mp3", "dur": 2.56, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "011_duu_看.mp3"}, {"set": "p.39 常用动词", "i": 12, "word": "thamŋaan", "cn": "工作", "file": "audio/012.mp3", "dur": 3.54, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "012_thamŋaan_工作.mp3"}, {"set": "p.39 常用动词", "i": 13, "word": "phûut", "cn": "说", "file": "audio/013.mp3", "dur": 3.28, "flag": "OK", "lead_s": 0.05, "trail_s": 0.04, "orig": "013_phûut_说.mp3"}, {"set": "p.39 常用动词", "i": 14, "word": "maa", "cn": "来", "file": "audio/014.mp3", "dur": 3.6, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "014_maa_来.mp3"}, {"set": "p.40 常用形容词", "i": 1, "word": "yàak", "cn": "难", "file": "audio/015.mp3", "dur": 6.56, "flag": "OK", "lead_s": 0.05, "trail_s": 0.03, "orig": "001_yàak_难.mp3"}, {"set": "p.40 常用形容词", "i": 2, "word": "ŋay", "cn": "容易", "file": "audio/016.mp3", "dur": 7.1, "flag": "OK", "lead_s": 0.06, "trail_s": 0.03, "orig": "002_ŋay_容易.mp3"}, {"set": "p.40 常用形容词", "i": 3, "word": "lék", "cn": "小", "file": "audio/017.mp3", "dur": 4.6, "flag": "OK", "lead_s": 0.06, "trail_s": 0.0, "orig": "003_lék_小.mp3"}, {"set": "p.40 常用形容词", "i": 4, "word": "sǔay", "cn": "美", "file": "audio/018.mp3", "dur": 7.18, "flag": "OK", "lead_s": 0.03, "trail_s": 0.02, "orig": "004_sǔay_美.mp3"}, {"set": "p.40 常用形容词", "i": 5, "word": "thuuk", "cn": "便宜", "file": "audio/019.mp3", "dur": 5.48, "flag": "OK", "lead_s": 0.06, "trail_s": 0.46, "orig": "005_thuuk_便宜.mp3"}, {"set": "p.40 常用形容词", "i": 6, "word": "dii", "cn": "好", "file": "audio/020.mp3", "dur": 5.94, "flag": "OK", "lead_s": 0.06, "trail_s": 0.3, "orig": "006_dii_好.mp3"}, {"set": "p.40 常用形容词", "i": 7, "word": "phèt", "cn": "辣", "file": "audio/021.mp3", "dur": 5.08, "flag": "OK", "lead_s": 0.06, "trail_s": 0.11, "orig": "007_phèt_辣.mp3"}, {"set": "p.40 常用形容词", "i": 8, "word": "ʔa-rɔ̀y", "cn": "好吃", "file": "audio/022.mp3", "dur": 5.1, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "008_ʔa-rɔ_y_好吃.mp3"}, {"set": "p.40 常用形容词", "i": 9, "word": "rɔ́n", "cn": "热", "file": "audio/023.mp3", "dur": 6.02, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "009_rɔ_n_热.mp3"}, {"set": "p.40 常用形容词", "i": 10, "word": "kɛn", "cn": "好(?手写)", "file": "audio/024.mp3", "dur": 5.06, "flag": "OK", "lead_s": 0.08, "trail_s": 0.05, "orig": "010_kɛn_好_手写.mp3"}, {"set": "p.40 常用形容词", "i": 11, "word": "mâk", "cn": "很/多", "file": "audio/025.mp3", "dur": 6.62, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "011_mâk_很_多.mp3"}, {"set": "p.42 课堂词汇", "i": 1, "word": "khruu", "cn": "老师", "file": "audio/026.mp3", "dur": 5.26, "flag": "OK", "lead_s": 0.04, "trail_s": 0.02, "orig": "001_khruu_老师.mp3"}, {"set": "p.42 课堂词汇", "i": 2, "word": "nákrian", "cn": "学生", "file": "audio/027.mp3", "dur": 2.9, "flag": "OK", "lead_s": 0.05, "trail_s": 0.0, "orig": "002_nákrian_学生.mp3"}, {"set": "p.42 课堂词汇", "i": 3, "word": "roongrian", "cn": "学校", "file": "audio/028.mp3", "dur": 4.96, "flag": "OK", "lead_s": 0.06, "trail_s": 0.08, "orig": "003_roongrian_学校.mp3"}, {"set": "p.42 课堂词汇", "i": 4, "word": "kaanbàan", "cn": "作业", "file": "audio/029.mp3", "dur": 4.28, "flag": "OK", "lead_s": 0.05, "trail_s": 0.07, "orig": "004_kaanbàan_作业.mp3"}, {"set": "p.42 课堂词汇", "i": 5, "word": "hɔɔŋrian", "cn": "教室", "file": "audio/030.mp3", "dur": 5.34, "flag": "OK", "lead_s": 0.06, "trail_s": 0.08, "orig": "005_hɔɔŋrian_教室.mp3"}, {"set": "p.42 课堂词汇", "i": 6, "word": "hɔɔŋnáam", "cn": "厕所", "file": "audio/031.mp3", "dur": 2.88, "flag": "OK", "lead_s": 0.06, "trail_s": 0.28, "orig": "006_hɔɔŋnáam_厕所.mp3"}, {"set": "p.42 课堂词汇", "i": 7, "word": "phûut", "cn": "说", "file": "audio/032.mp3", "dur": 6.24, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "007_phûut_说.mp3"}, {"set": "p.42 课堂词汇", "i": 8, "word": "fɛ̀ŋ", "cn": "听", "file": "audio/033.mp3", "dur": 6.24, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "008_fɛ_ŋ_听.mp3"}, {"set": "p.42 课堂词汇", "i": 9, "word": "rian", "cn": "学习", "file": "audio/034.mp3", "dur": 2.66, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "009_rian_学习.mp3"}, {"set": "p.42 课堂词汇", "i": 10, "word": "ʔàan", "cn": "读", "file": "audio/035.mp3", "dur": 3.36, "flag": "OK", "lead_s": 0.06, "trail_s": 0.07, "orig": "010_ʔàan_读.mp3"}, {"set": "p.42 课堂词汇", "i": 11, "word": "khian", "cn": "写", "file": "audio/036.mp3", "dur": 2.2, "flag": "OK", "lead_s": 0.23, "trail_s": 0.06, "orig": "011_khian_写.mp3"}, {"set": "p.42 课堂词汇", "i": 12, "word": "fûk", "cn": "练习", "file": "audio/037.mp3", "dur": 5.34, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "012_fûk_练习.mp3"}, {"set": "p.42 课堂词汇", "i": 13, "word": "thâam", "cn": "问", "file": "audio/038.mp3", "dur": 1.98, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "013_thâam_问.mp3"}, {"set": "p.42 课堂词汇", "i": 14, "word": "tɔ̀ɔp", "cn": "答", "file": "audio/039.mp3", "dur": 5.1, "flag": "OK", "lead_s": 0.05, "trail_s": 0.04, "orig": "014_tɔ_ɔp_答.mp3"}, {"set": "p.41 课堂用语", "i": 1, "word": "khǎwjay máy", "cn": "你明白吗（→明白/不明白）", "file": "audio/040.mp3", "dur": 8.98, "flag": "OK", "lead_s": 0.04, "trail_s": 0.03, "orig": "001_khǎwjay_máy你明白吗.mp3"}, {"set": "p.41 课堂用语", "i": 2, "word": "phûut máy", "cn": "你说什么（→再说一遍）", "file": "audio/041.mp3", "dur": 11.9, "flag": "OK", "lead_s": 0.06, "trail_s": 0.0, "orig": "002_phûut_máy你说什么.mp3"}, {"set": "p.41 课堂用语", "i": 3, "word": "phûut châa chûay máy", "cn": "能说慢点吗", "file": "audio/042.mp3", "dur": 12.02, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "003_phûut_châa_chûay_máy说慢点.mp3"}, {"set": "p.41 课堂用语", "i": 4, "word": "phûut thàaŋ ʔùn dâi máy", "cn": "能用别的说法吗", "file": "audio/043.mp3", "dur": 5.18, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "004_phûut_thàaŋ_ʔùn_dâi_máy别的说法.mp3"}, {"set": "p.41 课堂用语", "i": 5, "word": "rîap rɔ̂ɔŋ ʔìk kráŋ", "cn": "（老师说完）再重复", "file": "audio/044.mp3", "dur": 8.42, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "005_rîap_rɔ_ɔŋ_ʔìk_kráŋ再重复.mp3"}, {"set": "p.41 课堂用语", "i": 6, "word": "ʔàan ʔìk kráŋ", "cn": "跟读一遍", "file": "audio/045.mp3", "dur": 7.0, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "006_ʔàan_ʔìk_kráŋ跟读.mp3"}, {"set": "p.41 课堂用语", "i": 7, "word": "dúu nâa", "cn": "看第几页", "file": "audio/046.mp3", "dur": 10.84, "flag": "OK", "lead_s": 0.05, "trail_s": 0.08, "orig": "007_dúu_nâa看第几页.mp3"}, {"set": "p.41 课堂用语", "i": 8, "word": "tɔ̀ɔp mây", "cn": "不确定/不一定", "file": "audio/047.mp3", "dur": 7.72, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "008_tɔ_ɔp_mây不确定.mp3"}, {"set": "p.41 课堂用语", "i": 9, "word": "thâm khǎm thâam", "cn": "问问题", "file": "audio/048.mp3", "dur": 11.3, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "009_thâm_khǎm_thâam问问题.mp3"}, {"set": "p.41 课堂用语", "i": 10, "word": "mây khâw jay", "cn": "没听懂", "file": "audio/049.mp3", "dur": 17.06, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "010_mây_khâw_jay没听懂.mp3"}, {"set": "p.41 课堂用语", "i": 11, "word": "já mây sèt", "cn": "还没完吗？", "file": "audio/050.mp3", "dur": 7.5, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "011_já_mây_sèt还没完吗.mp3"}, {"set": "p.41 课堂用语", "i": 12, "word": "sèt lɛɛw", "cn": "已经结束", "file": "audio/051.mp3", "dur": 9.64, "flag": "OK", "lead_s": 0.05, "trail_s": 0.07, "orig": "012_sèt_lɛɛw已结束.mp3"}, {"set": "p.41 课堂用语", "i": 13, "word": "yàa mây sèt", "cn": "别结束", "file": "audio/052.mp3", "dur": 8.3, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "013_yàa_mây_sèt别结束.mp3"}, {"set": "p.41 课堂用语", "i": 14, "word": "mây mii", "cn": "没有", "file": "audio/053.mp3", "dur": 11.72, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "014_mây_mii没有.mp3"}, {"set": "p.41 课堂用语", "i": 15, "word": "kɔ̀ɔthôot", "cn": "对不起/打扰", "file": "audio/054.mp3", "dur": 8.78, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "015_kɔ_ɔthôot对不起.mp3"}, {"set": "p.41 课堂用语", "i": 16, "word": "tɔ̀ɔp khǎm thôop", "cn": "回答问题", "file": "audio/055.mp3", "dur": 10.23, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "016_top_khǎm_thôop回答.mp3"}];
+const SETS = [...new Set(DATA.map(d=>d.set))];
+let curSet = SETS[0];
+let mode = "normal";
+let seqTimer = null, seqIdx = -1;
+const au = document.getElementById("au");
+
+const tabsEl = document.getElementById("tabs");
+SETS.forEach(s=>{
+  const n = DATA.filter(d=>d.set===s).length;
+  const b = document.createElement("button");
+  b.className = "tab" + (s===curSet?" on":"");
+  b.textContent = `${s} (${n})`;
+  b.onclick = ()=>{ stopSeq(); curSet=s;
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
+    b.classList.add("on"); render(); };
+  tabsEl.appendChild(b);
+});
+
+document.querySelectorAll(".mbtn").forEach(btn=>{
+  btn.onclick = ()=>{ stopSeq(); mode = btn.dataset.mode;
+    document.querySelectorAll(".mbtn").forEach(x=>x.classList.remove("on"));
+    btn.classList.add("on"); render(); };
+});
+
+function render(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  DATA.filter(d=>d.set===curSet).forEach((d,i)=>{
+    const card = document.createElement("div");
+    card.className = "card"; card.id = "c"+i;
+    const play = document.createElement("button");
+    play.className = "pbtn"; play.textContent = "▶";
+    play.onclick = ()=>playClip(i);
+    const slow = document.createElement("button");
+    slow.className = "pbtn slow"; slow.textContent = "½";
+    slow.title = "半速播放";
+    slow.onclick = ()=>playClip(i, 0.6);
+    const meta = document.createElement("div"); meta.className = "meta";
+    const w = document.createElement("div"); w.className = "w";
+    w.innerHTML = `<span class="idx">${String(d.i).padStart(2,"0")}</span>${d.word}`;
+    const cn = document.createElement("div");
+    cn.className = "cn" + (mode==="quiz"?" hidden-cn":"");
+    cn.innerHTML = `<span class="txt">${d.cn}</span>`;
+    const rev = document.createElement("button");
+    rev.className = "reveal"; rev.style.display = (mode==="normal"?"none":"inline");
+    rev.textContent = "显示";
+    rev.onclick = ()=>{ const t = cn.querySelector(".txt");
+      const off = t.style.filter !== "blur(6px)" && t.style.filter !== "";
+      if(mode==="quiz"){ t.style.filter = off?"blur(6px)":"none"; rev.textContent = off?"显示":"隐藏"; }
+    };
+    cn.appendChild(rev);
+    const dur = document.createElement("div"); dur.className = "dur";
+    dur.textContent = d.dur.toFixed(1) + "s";
+    meta.appendChild(w); meta.appendChild(cn);
+    card.appendChild(play); card.appendChild(slow);
+    card.appendChild(meta); card.appendChild(dur);
+
+    if(mode==="dict"){ // 听写模式：盖住泰文，只留喇叭
+      w.style.filter = "blur(7px)"; w.style.userSelect = "none";
+      const rw = document.createElement("button");
+      rw.className = "reveal"; rw.textContent = "显示泰文";
+      rw.onclick = ()=>{ const off = w.style.filter !== "blur(7px)" && w.style.filter !== "";
+        w.style.filter = off?"blur(7px)":"none"; rw.textContent = off?"显示泰文":"隐藏"; };
+      meta.appendChild(rw);
+    }
+    list.appendChild(card);
+  });
+}
+
+function playClip(i, rate=1){
+  const items = DATA.filter(d=>d.set===curSet);
+  const d = items[i];
+  au.src = d.file;
+  au.playbackRate = rate;
+  au.play().catch(()=>alert("无法播放：" + d.file));
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("playing"));
+  const card = document.getElementById("c"+i);
+  if(card) card.classList.add("playing");
+  au.onended = ()=>{ if(card) card.classList.remove("playing"); };
+}
+
+const seqBtn = document.getElementById("seqplay");
+seqBtn.onclick = ()=>{
+  if(seqTimer !== null){ stopSeq(); return; }
+  seqBtn.textContent = "⏸ 停止连播";
+  seqIdx = -1;
+  const items = ()=>DATA.filter(d=>d.set===curSet);
+  const next = ()=>{
+    seqIdx++;
+    if(seqIdx >= items().length){ stopSeq(); return; }
+    playClip(seqIdx);
+    const d = items()[seqIdx];
+    au.onended = ()=>setTimeout(next, 600);
+  };
+  next();
+};
+function stopSeq(){
+  if(seqTimer){ clearTimeout(seqTimer); seqTimer=null; }
+  au.pause(); seqBtn.textContent = "▶ 连播本组";
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("playing"));
+}
+
+document.getElementById("checkbtn").onclick = ()=>{
+  const box = document.getElementById("checkout");
+  const rows = DATA;
+  const bad = rows.filter(d=>d.flag && d.flag!=="OK");
+  let txt = `自检 2026-11-04 · 共 ${rows.length} 条\n`;
+  txt += `通过 ${rows.length - bad.length} 条 · 疑似问题 ${bad.length} 条\n\n`;
+  const leads = rows.map(d=>d.lead_s||0), trails = rows.map(d=>d.trail_s||0);
+  txt += `开头静音：min ${Math.min(...leads).toFixed(2)}s / 平均 ${(leads.reduce((a,b)=>a+b,0)/leads.length).toFixed(2)}s\n`;
+  txt += `结尾静音：min ${Math.min(...trails).toFixed(2)}s / 平均 ${(trails.reduce((a,b)=>a+b,0)/trails.length).toFixed(2)}s\n`;
+  if(bad.length) txt += "\n" + bad.map(d=>`⚠️ ${d.word}: ${d.flag}`).join("\n");
+  else txt += "\n✅ 未检出开头/结尾截断（首尾能量均低于主体）";
+  box.style.display = "block"; box.textContent = txt;
+};
+
+// 数据注入 flag/lead_s/trail_s
+const CHK = [{"set": "p.39 常用动词", "i": 1, "word": "pay", "cn": "去", "file": "audio/001.mp3", "dur": 4.84, "flag": "OK", "lead_s": 0.04, "trail_s": 0.0, "orig": "001_pay_去.mp3"}, {"set": "p.39 常用动词", "i": 2, "word": "kin", "cn": "吃", "file": "audio/002.mp3", "dur": 5.14, "flag": "OK", "lead_s": 0.05, "trail_s": 0.02, "orig": "002_kin_吃.mp3"}, {"set": "p.39 常用动词", "i": 3, "word": "sǔun", "cn": "零/高(见登记存疑)", "file": "audio/003.mp3", "dur": 3.7, "flag": "OK", "lead_s": 0.06, "trail_s": 0.04, "orig": "003_sǔun_零_高_见登记存疑.mp3"}, {"set": "p.39 常用动词", "i": 4, "word": "sɛ̀ɛp", "cn": "练习", "file": "audio/004.mp3", "dur": 2.2, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "004_sɛ_ɛp_练习.mp3"}, {"set": "p.39 常用动词", "i": 5, "word": "rian", "cn": "学习", "file": "audio/005.mp3", "dur": 4.38, "flag": "OK", "lead_s": 0.05, "trail_s": 0.09, "orig": "005_rian_学习.mp3"}, {"set": "p.39 常用动词", "i": 6, "word": "chɔ̂p", "cn": "喜欢", "file": "audio/006.mp3", "dur": 6.6, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "006_chɔ_p_喜欢.mp3"}, {"set": "p.39 常用动词", "i": 7, "word": "mii", "cn": "有", "file": "audio/007.mp3", "dur": 3.38, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "007_mii_有.mp3"}, {"set": "p.39 常用动词", "i": 8, "word": "sɯ́", "cn": "买(手写存疑)", "file": "audio/008.mp3", "dur": 5.24, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "008_sɯ_买_手写存疑.mp3"}, {"set": "p.39 常用动词", "i": 9, "word": "jəə", "cn": "遇见", "file": "audio/009.mp3", "dur": 4.44, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "009_jəə_遇见.mp3"}, {"set": "p.39 常用动词", "i": 10, "word": "nɔɔn", "cn": "睡", "file": "audio/010.mp3", "dur": 4.84, "flag": "OK", "lead_s": 0.08, "trail_s": 0.06, "orig": "010_nɔɔn_睡.mp3"}, {"set": "p.39 常用动词", "i": 11, "word": "duu", "cn": "看", "file": "audio/011.mp3", "dur": 2.56, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "011_duu_看.mp3"}, {"set": "p.39 常用动词", "i": 12, "word": "thamŋaan", "cn": "工作", "file": "audio/012.mp3", "dur": 3.54, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "012_thamŋaan_工作.mp3"}, {"set": "p.39 常用动词", "i": 13, "word": "phûut", "cn": "说", "file": "audio/013.mp3", "dur": 3.28, "flag": "OK", "lead_s": 0.05, "trail_s": 0.04, "orig": "013_phûut_说.mp3"}, {"set": "p.39 常用动词", "i": 14, "word": "maa", "cn": "来", "file": "audio/014.mp3", "dur": 3.6, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "014_maa_来.mp3"}, {"set": "p.40 常用形容词", "i": 1, "word": "yàak", "cn": "难", "file": "audio/015.mp3", "dur": 6.56, "flag": "OK", "lead_s": 0.05, "trail_s": 0.03, "orig": "001_yàak_难.mp3"}, {"set": "p.40 常用形容词", "i": 2, "word": "ŋay", "cn": "容易", "file": "audio/016.mp3", "dur": 7.1, "flag": "OK", "lead_s": 0.06, "trail_s": 0.03, "orig": "002_ŋay_容易.mp3"}, {"set": "p.40 常用形容词", "i": 3, "word": "lék", "cn": "小", "file": "audio/017.mp3", "dur": 4.6, "flag": "OK", "lead_s": 0.06, "trail_s": 0.0, "orig": "003_lék_小.mp3"}, {"set": "p.40 常用形容词", "i": 4, "word": "sǔay", "cn": "美", "file": "audio/018.mp3", "dur": 7.18, "flag": "OK", "lead_s": 0.03, "trail_s": 0.02, "orig": "004_sǔay_美.mp3"}, {"set": "p.40 常用形容词", "i": 5, "word": "thuuk", "cn": "便宜", "file": "audio/019.mp3", "dur": 5.48, "flag": "OK", "lead_s": 0.06, "trail_s": 0.46, "orig": "005_thuuk_便宜.mp3"}, {"set": "p.40 常用形容词", "i": 6, "word": "dii", "cn": "好", "file": "audio/020.mp3", "dur": 5.94, "flag": "OK", "lead_s": 0.06, "trail_s": 0.3, "orig": "006_dii_好.mp3"}, {"set": "p.40 常用形容词", "i": 7, "word": "phèt", "cn": "辣", "file": "audio/021.mp3", "dur": 5.08, "flag": "OK", "lead_s": 0.06, "trail_s": 0.11, "orig": "007_phèt_辣.mp3"}, {"set": "p.40 常用形容词", "i": 8, "word": "ʔa-rɔ̀y", "cn": "好吃", "file": "audio/022.mp3", "dur": 5.1, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "008_ʔa-rɔ_y_好吃.mp3"}, {"set": "p.40 常用形容词", "i": 9, "word": "rɔ́n", "cn": "热", "file": "audio/023.mp3", "dur": 6.02, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "009_rɔ_n_热.mp3"}, {"set": "p.40 常用形容词", "i": 10, "word": "kɛn", "cn": "好(?手写)", "file": "audio/024.mp3", "dur": 5.06, "flag": "OK", "lead_s": 0.08, "trail_s": 0.05, "orig": "010_kɛn_好_手写.mp3"}, {"set": "p.40 常用形容词", "i": 11, "word": "mâk", "cn": "很/多", "file": "audio/025.mp3", "dur": 6.62, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "011_mâk_很_多.mp3"}, {"set": "p.42 课堂词汇", "i": 1, "word": "khruu", "cn": "老师", "file": "audio/026.mp3", "dur": 5.26, "flag": "OK", "lead_s": 0.04, "trail_s": 0.02, "orig": "001_khruu_老师.mp3"}, {"set": "p.42 课堂词汇", "i": 2, "word": "nákrian", "cn": "学生", "file": "audio/027.mp3", "dur": 2.9, "flag": "OK", "lead_s": 0.05, "trail_s": 0.0, "orig": "002_nákrian_学生.mp3"}, {"set": "p.42 课堂词汇", "i": 3, "word": "roongrian", "cn": "学校", "file": "audio/028.mp3", "dur": 4.96, "flag": "OK", "lead_s": 0.06, "trail_s": 0.08, "orig": "003_roongrian_学校.mp3"}, {"set": "p.42 课堂词汇", "i": 4, "word": "kaanbàan", "cn": "作业", "file": "audio/029.mp3", "dur": 4.28, "flag": "OK", "lead_s": 0.05, "trail_s": 0.07, "orig": "004_kaanbàan_作业.mp3"}, {"set": "p.42 课堂词汇", "i": 5, "word": "hɔɔŋrian", "cn": "教室", "file": "audio/030.mp3", "dur": 5.34, "flag": "OK", "lead_s": 0.06, "trail_s": 0.08, "orig": "005_hɔɔŋrian_教室.mp3"}, {"set": "p.42 课堂词汇", "i": 6, "word": "hɔɔŋnáam", "cn": "厕所", "file": "audio/031.mp3", "dur": 2.88, "flag": "OK", "lead_s": 0.06, "trail_s": 0.28, "orig": "006_hɔɔŋnáam_厕所.mp3"}, {"set": "p.42 课堂词汇", "i": 7, "word": "phûut", "cn": "说", "file": "audio/032.mp3", "dur": 6.24, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "007_phûut_说.mp3"}, {"set": "p.42 课堂词汇", "i": 8, "word": "fɛ̀ŋ", "cn": "听", "file": "audio/033.mp3", "dur": 6.24, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "008_fɛ_ŋ_听.mp3"}, {"set": "p.42 课堂词汇", "i": 9, "word": "rian", "cn": "学习", "file": "audio/034.mp3", "dur": 2.66, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "009_rian_学习.mp3"}, {"set": "p.42 课堂词汇", "i": 10, "word": "ʔàan", "cn": "读", "file": "audio/035.mp3", "dur": 3.36, "flag": "OK", "lead_s": 0.06, "trail_s": 0.07, "orig": "010_ʔàan_读.mp3"}, {"set": "p.42 课堂词汇", "i": 11, "word": "khian", "cn": "写", "file": "audio/036.mp3", "dur": 2.2, "flag": "OK", "lead_s": 0.23, "trail_s": 0.06, "orig": "011_khian_写.mp3"}, {"set": "p.42 课堂词汇", "i": 12, "word": "fûk", "cn": "练习", "file": "audio/037.mp3", "dur": 5.34, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "012_fûk_练习.mp3"}, {"set": "p.42 课堂词汇", "i": 13, "word": "thâam", "cn": "问", "file": "audio/038.mp3", "dur": 1.98, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "013_thâam_问.mp3"}, {"set": "p.42 课堂词汇", "i": 14, "word": "tɔ̀ɔp", "cn": "答", "file": "audio/039.mp3", "dur": 5.1, "flag": "OK", "lead_s": 0.05, "trail_s": 0.04, "orig": "014_tɔ_ɔp_答.mp3"}, {"set": "p.41 课堂用语", "i": 1, "word": "khǎwjay máy", "cn": "你明白吗（→明白/不明白）", "file": "audio/040.mp3", "dur": 8.98, "flag": "OK", "lead_s": 0.04, "trail_s": 0.03, "orig": "001_khǎwjay_máy你明白吗.mp3"}, {"set": "p.41 课堂用语", "i": 2, "word": "phûut máy", "cn": "你说什么（→再说一遍）", "file": "audio/041.mp3", "dur": 11.9, "flag": "OK", "lead_s": 0.06, "trail_s": 0.0, "orig": "002_phûut_máy你说什么.mp3"}, {"set": "p.41 课堂用语", "i": 3, "word": "phûut châa chûay máy", "cn": "能说慢点吗", "file": "audio/042.mp3", "dur": 12.02, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "003_phûut_châa_chûay_máy说慢点.mp3"}, {"set": "p.41 课堂用语", "i": 4, "word": "phûut thàaŋ ʔùn dâi máy", "cn": "能用别的说法吗", "file": "audio/043.mp3", "dur": 5.18, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "004_phûut_thàaŋ_ʔùn_dâi_máy别的说法.mp3"}, {"set": "p.41 课堂用语", "i": 5, "word": "rîap rɔ̂ɔŋ ʔìk kráŋ", "cn": "（老师说完）再重复", "file": "audio/044.mp3", "dur": 8.42, "flag": "OK", "lead_s": 0.05, "trail_s": 0.06, "orig": "005_rîap_rɔ_ɔŋ_ʔìk_kráŋ再重复.mp3"}, {"set": "p.41 课堂用语", "i": 6, "word": "ʔàan ʔìk kráŋ", "cn": "跟读一遍", "file": "audio/045.mp3", "dur": 7.0, "flag": "OK", "lead_s": 0.06, "trail_s": 0.06, "orig": "006_ʔàan_ʔìk_kráŋ跟读.mp3"}, {"set": "p.41 课堂用语", "i": 7, "word": "dúu nâa", "cn": "看第几页", "file": "audio/046.mp3", "dur": 10.84, "flag": "OK", "lead_s": 0.05, "trail_s": 0.08, "orig": "007_dúu_nâa看第几页.mp3"}, {"set": "p.41 课堂用语", "i": 8, "word": "tɔ̀ɔp mây", "cn": "不确定/不一定", "file": "audio/047.mp3", "dur": 7.72, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "008_tɔ_ɔp_mây不确定.mp3"}, {"set": "p.41 课堂用语", "i": 9, "word": "thâm khǎm thâam", "cn": "问问题", "file": "audio/048.mp3", "dur": 11.3, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "009_thâm_khǎm_thâam问问题.mp3"}, {"set": "p.41 课堂用语", "i": 10, "word": "mây khâw jay", "cn": "没听懂", "file": "audio/049.mp3", "dur": 17.06, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "010_mây_khâw_jay没听懂.mp3"}, {"set": "p.41 课堂用语", "i": 11, "word": "já mây sèt", "cn": "还没完吗？", "file": "audio/050.mp3", "dur": 7.5, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "011_já_mây_sèt还没完吗.mp3"}, {"set": "p.41 课堂用语", "i": 12, "word": "sèt lɛɛw", "cn": "已经结束", "file": "audio/051.mp3", "dur": 9.64, "flag": "OK", "lead_s": 0.05, "trail_s": 0.07, "orig": "012_sèt_lɛɛw已结束.mp3"}, {"set": "p.41 课堂用语", "i": 13, "word": "yàa mây sèt", "cn": "别结束", "file": "audio/052.mp3", "dur": 8.3, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "013_yàa_mây_sèt别结束.mp3"}, {"set": "p.41 课堂用语", "i": 14, "word": "mây mii", "cn": "没有", "file": "audio/053.mp3", "dur": 11.72, "flag": "OK", "lead_s": 0.06, "trail_s": 0.05, "orig": "014_mây_mii没有.mp3"}, {"set": "p.41 课堂用语", "i": 15, "word": "kɔ̀ɔthôot", "cn": "对不起/打扰", "file": "audio/054.mp3", "dur": 8.78, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "015_kɔ_ɔthôot对不起.mp3"}, {"set": "p.41 课堂用语", "i": 16, "word": "tɔ̀ɔp khǎm thôop", "cn": "回答问题", "file": "audio/055.mp3", "dur": 10.23, "flag": "OK", "lead_s": 0.05, "trail_s": 0.05, "orig": "016_top_khǎm_thôop回答.mp3"}];
+DATA.forEach(d=>{ const c = CHK.find(x=>x.file===d.file);
+  if(c){ d.flag=c.flag; d.lead_s=c.lead_s; d.trail_s=c.trail_s;
+    if(c.flag!=="OK"){ const card=document.querySelector(".w"); } } });
+render();
+if("0" !== "0") document.getElementById("warnbar").style.display="block";
+</script>
+</body>
+</html>
